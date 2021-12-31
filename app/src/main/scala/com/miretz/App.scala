@@ -1,22 +1,48 @@
 package com.miretz
 
+import com.miretz.MyVerticle
 import io.vertx.core.Vertx
+import io.vertx.core.http.HttpMethod
+import io.vertx.lang.scala.ScalaVerticle
 
-inline val PORT = 8080
+import scala.util.{Failure, Success}
 
 object App {
-  def main(args: Array[String]): Unit = {
-    println(s"Server starting on port $PORT ...")
 
-    Vertx.vertx
-      .createHttpServer()
-      .requestHandler(
-        _.response()
-          .putHeader("content-type", "text/plain")
-          .end(greeting())
+  private val vertx = Vertx.vertx()
+
+  def main(args: Array[String]): Unit = {
+    // Deploy server and test it
+    vertx
+      .deployVerticle(
+        ScalaVerticle.nameForVerticle[MyVerticle]
       )
-      .listen(PORT)
+      .onSuccess({ h =>
+        println("MyVerticle was deployed.")
+        callServer()
+      })
   }
 
-  def greeting(): String = "The server is alive."
+  def callServer(): Unit = {
+    vertx
+      .createHttpClient()
+      .request(
+        HttpMethod.GET,
+        8080,
+        "127.0.0.1",
+        "/"
+      )
+      .compose(req =>
+        req
+          .send()
+          .compose(resp => {
+            println(s"Got response status: ${resp.statusCode()}")
+            resp.body()
+          })
+      )
+      .onSuccess(body => {
+        println(s"Got data: ${body.toString}")
+      })
+      .onFailure(e => e.printStackTrace())
+  }
 }

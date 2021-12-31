@@ -5,8 +5,6 @@ import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.lang.scala.ScalaVerticle
 
-import scala.util.{Failure, Success}
-
 object App {
 
   private val vertx = Vertx.vertx()
